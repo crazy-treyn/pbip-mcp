@@ -1,0 +1,122 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "c787416dec05fc297bf4",
+  "position": {
+    "x": 18.816265779754136,
+    "y": 26.342772091655792,
+    "z": 0,
+    "height": 338.6927840355745,
+    "width": 368.04615865199094,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Month"
+                    }
+                  },
+                  "Property": "Month"
+                }
+              },
+              "queryRef": "Month.Month",
+              "nativeQueryRef": "Month",
+              "active": true
+            }
+          ]
+        },
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MetricName"
+                    }
+                  },
+                  "Property": "MetricName"
+                }
+              },
+              "queryRef": "MetricName.MetricName",
+              "nativeQueryRef": "MetricName",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Fact"
+                    }
+                  },
+                  "Property": "PlaceholderMeasure"
+                }
+              },
+              "queryRef": "Fact.PlaceholderMeasure",
+              "nativeQueryRef": "PlaceholderMeasure"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "8331195cbc05f1a7c8c5",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Fact"
+              }
+            },
+            "Property": "PlaceholderMeasure"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f59987cfddc23e1560d9",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "MetricName"
+              }
+            },
+            "Property": "MetricName"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "f869c2c97017e33a5b59",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Month"
+              }
+            },
+            "Property": "Month"
+          }
+        },
+        "type": "Categorical"
+      }
+    ]
+  }
+}
