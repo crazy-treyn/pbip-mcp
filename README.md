@@ -16,14 +16,14 @@ uv sync # initialize virtual environment and install dependencies
 
 ### Add MCP server to MCP Client
 ```json
-"mcpServers":{
+"mcpServers": {
 	"pbip-mcp": {
-      "command":"C:\\{YOUR_GIT_REPO_PATH_HERE}\\.venv\\Scripts\\python.exe",
-      "args": [
-        "-m",
-        "pbip_mcp.server"
-      ]
-    }
+		"command": "C:\\{YOUR_GIT_REPO_PATH_HERE}\\.venv\\Scripts\\python.exe",
+		"args": [
+			"-m",
+			"pbip_mcp.server"
+		]
+	}
 }
 ```
 
