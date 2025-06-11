@@ -143,6 +143,29 @@ class BaseOperation(ABC):
         
         return True, ""
     
+    def _normalize_element_name(self, name: str) -> str:
+        """Normalize element name by removing surrounding quotes for comparison.
+        
+        This enables consistent name matching regardless of whether the input
+        includes quotes or not, making the API more user-friendly.
+        
+        Args:
+            name: Element name that may or may not have surrounding quotes
+            
+        Returns:
+            Name with surrounding quotes removed
+        """
+        if not name:
+            return name
+            
+        # Remove surrounding single or double quotes
+        name = name.strip()
+        if ((name.startswith("'") and name.endswith("'")) or 
+            (name.startswith('"') and name.endswith('"'))):
+            return name[1:-1]
+        
+        return name
+    
     @abstractmethod
     async def execute(self, operation: str, arguments: Dict[str, Any]) -> List[TextContent]:
         """Execute the specified operation."""

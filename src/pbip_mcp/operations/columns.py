@@ -28,7 +28,9 @@ class ColumnOperations(BaseOperation):
         project = self._load_project(arguments["project_path"])
         table_name = arguments["table_name"]
         
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find table using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
@@ -60,11 +62,15 @@ class ColumnOperations(BaseOperation):
         data_type = arguments.get("data_type", "string")
         
         # Validate
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find table using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
-        if any(c.name == column_name for c in table.columns):
+        # Check if column already exists using normalized name comparison
+        normalized_input_name = self._normalize_element_name(column_name)
+        if any(self._normalize_element_name(c.name) == normalized_input_name for c in table.columns):
             return self._error_response(f"Column '{column_name}' already exists in table '{table_name}'")
         
         # Read table file
@@ -107,11 +113,15 @@ class ColumnOperations(BaseOperation):
         column_name = arguments["column_name"]
         
         # Validate
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find table using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
-        column = next((c for c in table.columns if c.name == column_name), None)
+        # Find column using normalized name comparison
+        normalized_input_name = self._normalize_element_name(column_name)
+        column = next((c for c in table.columns if self._normalize_element_name(c.name) == normalized_input_name), None)
         if not column:
             return self._error_response(f"Column '{column_name}' not found in table '{table_name}'")
         
@@ -147,8 +157,9 @@ class ColumnOperations(BaseOperation):
         if "expression" in arguments and is_calculated:
             updates["expression"] = arguments["expression"]
         
-        # Update TMDL
-        updated_content = self.tmdl_writer.update_element(content, "column", column_name, updates)
+        # Update TMDL using the actual column name from the file
+        actual_column_name = column.name
+        updated_content = self.tmdl_writer.update_element(content, "column", actual_column_name, updates)
         
         # Write back
         self._write_table_file(arguments["project_path"], table_name, updated_content)
@@ -156,7 +167,7 @@ class ColumnOperations(BaseOperation):
         return self._success_response({
             "success": True,
             "table_name": table_name,
-            "column_name": column_name,
+            "column_name": actual_column_name,
             "updated_fields": list(updates.keys())
         })
     
@@ -167,18 +178,24 @@ class ColumnOperations(BaseOperation):
         column_name = arguments["column_name"]
         
         # Validate
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find table using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
-        if not any(c.name == column_name for c in table.columns):
+        # Find column using normalized name comparison
+        normalized_input_name = self._normalize_element_name(column_name)
+        target_column = next((c for c in table.columns if self._normalize_element_name(c.name) == normalized_input_name), None)
+        if not target_column:
             return self._error_response(f"Column '{column_name}' not found in table '{table_name}'")
         
         # Read table file
         content = self._read_table_file(arguments["project_path"], table_name)
         
-        # Delete column
-        updated_content = self.tmdl_writer.delete_element(content, "column", column_name)
+        # Delete column using the actual column name from the file
+        actual_column_name = target_column.name
+        updated_content = self.tmdl_writer.delete_element(content, "column", actual_column_name)
         
         # Write back
         self._write_table_file(arguments["project_path"], table_name, updated_content)
@@ -186,6 +203,6 @@ class ColumnOperations(BaseOperation):
         return self._success_response({
             "success": True,
             "table_name": table_name,
-            "column_name": column_name,
+            "column_name": actual_column_name,
             "action": "deleted"
         })

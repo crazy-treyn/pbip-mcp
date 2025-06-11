@@ -57,14 +57,16 @@ class MeasureOperations(BaseOperation):
         measure_name = arguments["measure_name"]
         expression = arguments["expression"]
         
-        # Validate table exists
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Validate table exists using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
         # Check if measure already exists (across all tables)
+        normalized_input_name = self._normalize_element_name(measure_name)
         for t in project.semantic_model.tables:
-            if any(m.name == measure_name for m in t.measures):
+            if any(self._normalize_element_name(m.name) == normalized_input_name for m in t.measures):
                 return self._error_response(f"Measure '{measure_name}' already exists in table '{t.name}'")
         
         # Validate DAX expression
@@ -102,12 +104,15 @@ class MeasureOperations(BaseOperation):
         table_name = arguments["table_name"]
         measure_name = arguments["measure_name"]
         
-        # Find the measure
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find the table using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
-        measure = next((m for m in table.measures if m.name == measure_name), None)
+        # Find measure using normalized name comparison
+        normalized_input_name = self._normalize_element_name(measure_name)
+        measure = next((m for m in table.measures if self._normalize_element_name(m.name) == normalized_input_name), None)
         if not measure:
             return self._error_response(f"Measure '{measure_name}' not found in table '{table_name}'")
         
@@ -125,13 +130,14 @@ class MeasureOperations(BaseOperation):
         if "format_string" in arguments:
             updates["format_string"] = arguments["format_string"]
         
-        # Update TMDL
-        updated_content = self.tmdl_writer.update_element(content, "measure", measure_name, updates)
+        # Update TMDL using the actual measure name from the file
+        actual_measure_name = measure.name
+        updated_content = self.tmdl_writer.update_element(content, "measure", actual_measure_name, updates)
         
         # Handle description separately (as comments)
         if "description" in arguments:
             updated_content = self.tmdl_writer.add_description_comments(
-                updated_content, "measure", measure_name, arguments["description"]
+                updated_content, "measure", actual_measure_name, arguments["description"]
             )
         
         # Write back
@@ -140,7 +146,7 @@ class MeasureOperations(BaseOperation):
         return self._success_response({
             "success": True,
             "table_name": table_name,
-            "measure_name": measure_name,
+            "measure_name": actual_measure_name,
             "updated_fields": list(updates.keys()) + (["description"] if "description" in arguments else [])
         })
     
@@ -150,19 +156,24 @@ class MeasureOperations(BaseOperation):
         table_name = arguments["table_name"]
         measure_name = arguments["measure_name"]
         
-        # Validate
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Validate table exists using normalized name comparison
+        normalized_table_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
-        if not any(m.name == measure_name for m in table.measures):
+        # Find measure using normalized name comparison
+        normalized_input_name = self._normalize_element_name(measure_name)
+        target_measure = next((m for m in table.measures if self._normalize_element_name(m.name) == normalized_input_name), None)
+        if not target_measure:
             return self._error_response(f"Measure '{measure_name}' not found in table '{table_name}'")
         
         # Read table file
         content = self._read_table_file(arguments["project_path"], table_name)
         
-        # Delete measure
-        updated_content = self.tmdl_writer.delete_element(content, "measure", measure_name)
+        # Delete measure using the actual measure name from the file
+        actual_measure_name = target_measure.name
+        updated_content = self.tmdl_writer.delete_element(content, "measure", actual_measure_name)
         
         # Write back
         self._write_table_file(arguments["project_path"], table_name, updated_content)
@@ -170,6 +181,6 @@ class MeasureOperations(BaseOperation):
         return self._success_response({
             "success": True,
             "table_name": table_name,
-            "measure_name": measure_name,
+            "measure_name": actual_measure_name,
             "action": "deleted"
         })

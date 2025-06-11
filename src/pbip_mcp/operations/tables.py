@@ -46,7 +46,9 @@ class TableOperations(BaseOperation):
         project = self._load_project(arguments["project_path"])
         table_name = arguments["table_name"]
         
-        table = next((t for t in project.semantic_model.tables if t.name == table_name), None)
+        # Find table using normalized name comparison
+        normalized_input_name = self._normalize_element_name(table_name)
+        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_input_name), None)
         if not table:
             return self._error_response(f"Table '{table_name}' not found")
         
