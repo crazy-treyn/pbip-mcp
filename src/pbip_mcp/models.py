@@ -36,6 +36,7 @@ class PartitionMode(str, Enum):
     DIRECT_QUERY = "directQuery"
     DUAL = "dual"
     CALCULATED = "calculated"
+    DIRECT_LAKE = "directLake"
 
 
 class Cardinality(str, Enum):
