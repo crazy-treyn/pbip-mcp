@@ -51,9 +51,9 @@ class Cardinality(str, Enum):
 class CrossFilteringBehavior(str, Enum):
     """Cross-filtering behavior for relationships."""
 
-    AUTOMATIC = "Automatic"
-    ONE_DIRECTION = "OneDirection"
-    BOTH_DIRECTIONS = "BothDirections"
+    AUTOMATIC = "automatic"
+    ONE_DIRECTION = "oneDirection"
+    BOTH_DIRECTIONS = "bothDirections"
 
 
 class Annotation(BaseModel):
