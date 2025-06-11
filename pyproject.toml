@@ -1,9 +1,9 @@
 [project]
-name = "pbip-mcp-server"
+name = "pbip-mcp"
 version = "0.1.0"
-description = "Power BI Project MCP Server for local editing of PBIP files"
+description = "Power BI Project MCP Server for local editing of Power BI Projects that use .TMDL"
 authors = [
-    {name = "PBI MCP Team", email = "team@example.com"},
+    {name = "Trey", email = "team@example.com"},
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,8 +48,8 @@ dev = [
 pbip-mcp = "pbip_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/your-org/pbip-mcp-server"
-Repository = "https://github.com/your-org/pbip-mcp-server.git"
+Homepage = "https://github.com/crazy-treyn/pbip-mcp"
+Repository = "https://github.com/crazy-treyn/pbip-mcp.git"
 
 [build-system]
 requires = ["hatchling"]

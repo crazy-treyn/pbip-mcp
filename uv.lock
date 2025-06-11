@@ -397,7 +397,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pbip-mcp-server"
+name = "pbip-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

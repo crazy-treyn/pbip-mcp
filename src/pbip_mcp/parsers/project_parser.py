@@ -21,11 +21,15 @@ class ProjectParser:
         self.tmdl_parser = TMDLParser()
 
     def load_project(self, project_path: str) -> ProjectStructure:
-        """Load complete PBIP project from file path."""
+        """Load complete PBIP project from file path or standalone semantic model."""
         project_dir = Path(project_path)
 
         if not project_dir.exists():
             raise ProjectParseError(f"Project path does not exist: {project_path}")
+
+        # Check if this is a standalone semantic model directory
+        if project_dir.is_dir() and project_dir.name.endswith(".SemanticModel"):
+            return self._load_semantic_model_only(project_dir)
 
         # Find the .pbip file
         pbip_file = None
@@ -36,7 +40,11 @@ class ProjectParser:
             # Look for .pbip files in the directory
             pbip_files = list(project_dir.glob("*.pbip"))
             if not pbip_files:
-                raise ProjectParseError(f"No .pbip file found in {project_path}")
+                # Check if there are any .SemanticModel directories
+                semantic_model_dirs = list(project_dir.glob("*.SemanticModel"))
+                if semantic_model_dirs:
+                    return self._load_semantic_model_only(semantic_model_dirs[0])
+                raise ProjectParseError(f"No .pbip file or .SemanticModel directory found in {project_path}")
             pbip_file = pbip_files[0]
 
         # Load project info from .pbip file
@@ -490,3 +498,37 @@ class ProjectParser:
                 print(f"Warning: Error processing project {pbip_file}: {e}")
 
         return projects
+
+    def _load_semantic_model_only(self, semantic_model_dir: Path) -> ProjectStructure:
+        """Load standalone semantic model without .pbip file."""
+        try:
+            # Load semantic model
+            semantic_model = self._load_semantic_model(semantic_model_dir)
+            
+            # Create synthetic project info
+            project_name = semantic_model_dir.name.replace('.SemanticModel', '')
+            project_info = ProjectInfo(
+                version="1.0",
+                artifacts=[],
+                settings={}
+            )
+            
+            # Load platform configs from parent directory
+            platform_configs = self._load_platform_configs(semantic_model_dir.parent)
+            
+            # Load editor settings
+            editor_settings = self._load_editor_settings(semantic_model_dir)
+            
+            # Load diagram layout
+            diagram_layout = self._load_diagram_layout(semantic_model_dir)
+            
+            return ProjectStructure(
+                project_info=project_info,
+                semantic_model=semantic_model,
+                platform_configs=platform_configs,
+                editor_settings=editor_settings,
+                diagram_layout=diagram_layout,
+            )
+            
+        except Exception as e:
+            raise ProjectParseError(f"Error loading standalone semantic model: {e}")

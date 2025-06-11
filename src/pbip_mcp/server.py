@@ -67,7 +67,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Filter by table name (optional)"}
                         },
                         "required": ["project_path"]
@@ -82,7 +82,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table to add measure to"},
                             "measure_name": {"type": "string", "description": "Name of the new measure"},
                             "expression": {"type": "string", "description": "DAX expression"},
@@ -101,7 +101,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table containing the measure"},
                             "measure_name": {"type": "string", "description": "Name of the measure to update"},
                             "expression": {"type": "string", "description": "New DAX expression (optional)"},
@@ -120,7 +120,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table containing the measure"},
                             "measure_name": {"type": "string", "description": "Name of the measure to delete"}
                         },
@@ -140,7 +140,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table name"}
                         },
                         "required": ["project_path", "table_name"]
@@ -155,7 +155,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table to add column to"},
                             "column_name": {"type": "string", "description": "Name of the new column"},
                             "data_type": {"type": "string", "description": "Data type (string, int64, double, boolean, dateTime)", "default": "string"},
@@ -176,7 +176,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table containing the column"},
                             "column_name": {"type": "string", "description": "Name of the column to update"},
                             "data_type": {"type": "string", "description": "New data type (optional)"},
@@ -197,7 +197,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table containing the column"},
                             "column_name": {"type": "string", "description": "Name of the column to delete"}
                         },
@@ -217,7 +217,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"}
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"}
                         },
                         "required": ["project_path"]
                     }
@@ -231,7 +231,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"},
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
                             "table_name": {"type": "string", "description": "Table name"}
                         },
                         "required": ["project_path", "table_name"]
@@ -250,7 +250,7 @@ class SimplifiedPBIPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project"}
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"}
                         },
                         "required": ["project_path"]
                     }
@@ -264,11 +264,11 @@ class SimplifiedPBIPServer:
                 "handler": self._list_projects,
                 "tool": Tool(
                     name="list_projects",
-                    description="List all PBIP projects in a directory",
+                    description="List all PBIP projects and standalone semantic models in a directory",
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "directory": {"type": "string", "description": "Directory path to scan for PBIP projects"}
+                            "directory": {"type": "string", "description": "Directory path to scan for PBIP projects and standalone .SemanticModel directories"}
                         },
                         "required": ["directory"]
                     }
@@ -278,11 +278,11 @@ class SimplifiedPBIPServer:
                 "handler": self._load_project,
                 "tool": Tool(
                     name="load_project",
-                    description="Load complete PBIP project structure and metadata",
+                    description="Load complete project structure and metadata from PBIP project or standalone semantic model",
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "project_path": {"type": "string", "description": "Path to PBIP project file or directory"}
+                            "project_path": {"type": "string", "description": "Path to PBIP project file, directory, or .SemanticModel directory"}
                         },
                         "required": ["project_path"]
                     }
@@ -339,7 +339,7 @@ class SimplifiedPBIPServer:
             return f"Unknown resource: {uri}"
     
     async def _list_projects(self, arguments: Dict[str, Any]) -> List[TextContent]:
-        """List PBIP projects in a directory."""
+        """List PBIP projects and standalone semantic models in a directory."""
         import json
         from pathlib import Path
         
@@ -348,18 +348,42 @@ class SimplifiedPBIPServer:
             return [TextContent(type="text", text=f"Directory not found: {directory}")]
         
         projects = []
+        processed_dirs = set()
+        
+        # Find .pbip projects
         for pbip_file in directory.rglob("*.pbip"):
             try:
                 project_info = {
                     "name": pbip_file.stem,
                     "path": str(pbip_file),
                     "directory": str(pbip_file.parent),
+                    "type": "pbip_project",
                     "has_semantic_model": any(pbip_file.parent.glob("*.SemanticModel")),
                     "has_report": any(pbip_file.parent.glob("*.Report"))
                 }
                 projects.append(project_info)
+                processed_dirs.add(pbip_file.parent)
             except Exception as e:
                 logger.warning(f"Error scanning project {pbip_file}: {e}")
+        
+        # Find standalone .SemanticModel directories
+        for semantic_dir in directory.rglob("*.SemanticModel"):
+            try:
+                # Skip if this semantic model is already part of a .pbip project
+                if semantic_dir.parent in processed_dirs:
+                    continue
+                    
+                project_info = {
+                    "name": semantic_dir.name.replace('.SemanticModel', ''),
+                    "path": str(semantic_dir),
+                    "directory": str(semantic_dir.parent),
+                    "type": "standalone_semantic_model",
+                    "has_semantic_model": True,
+                    "has_report": False
+                }
+                projects.append(project_info)
+            except Exception as e:
+                logger.warning(f"Error scanning semantic model {semantic_dir}: {e}")
         
         return [TextContent(type="text", text=json.dumps({
             "count": len(projects),
