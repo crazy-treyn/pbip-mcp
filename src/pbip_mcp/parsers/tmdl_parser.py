@@ -287,9 +287,10 @@ class TMDLParser:
                 self.description_buffer.clear()
                 
                 measure = self._parse_measure()
-                if measure_description:
-                    measure["description"] = measure_description
-                table["measures"].append(measure)
+                if measure is not None:  # Only add valid measures
+                    if measure_description:
+                        measure["description"] = measure_description
+                    table["measures"].append(measure)
                 continue
             elif line_content.startswith("hierarchy "):
                 table["hierarchies"].append(self._parse_hierarchy())
@@ -406,15 +407,27 @@ class TMDLParser:
 
         return column
 
-    def _parse_measure(self) -> Dict[str, Any]:
-        """Parse measure definition."""
+    def _parse_measure(self) -> Optional[Dict[str, Any]]:
+        """Parse measure definition with error recovery."""
         line = self._get_current_line().strip()
         match = re.match(r"measure\s+(.+?)\s*=\s*(.+)", line)
         if not match:
-            raise TMDLParseError("Invalid measure definition", self.current_line + 1)
+            # Try to skip malformed measure and continue parsing
+            self._advance_line()
+            # Skip any properties that belong to this malformed measure
+            self._skip_measure_properties()
+            return None
 
         measure_name = match.group(1).strip()
         expression = match.group(2).strip()
+        
+        # Validate that measure name has proper quotes if it contains spaces
+        if " " in measure_name and not ((measure_name.startswith("'") and measure_name.endswith("'")) or 
+                                       (measure_name.startswith('"') and measure_name.endswith('"'))):
+            self._advance_line()
+            self._skip_measure_properties()
+            return None
+            
         self._advance_line()
 
         measure = {
@@ -458,10 +471,35 @@ class TMDLParser:
                 if annotation["name"] != "Description":
                     measure["annotations"].append(annotation)
                 continue
+            elif line_content.startswith("changedProperty"):
+                # Skip changedProperty lines - these are metadata we don't need
+                pass
+            elif line_content.startswith("displayFolder:"):
+                measure["display_folder"] = self._parse_property_value(line_content)
 
             self._advance_line()
 
         return measure
+    
+    def _skip_measure_properties(self):
+        """Skip properties belonging to a malformed measure."""
+        base_indent = None
+        
+        while self.current_line < len(self.lines):
+            line = self._get_current_line()
+            if not line.strip():
+                self._advance_line()
+                continue
+                
+            indent = self._get_indentation(line)
+            
+            if base_indent is None and line.strip():
+                base_indent = indent
+            elif indent <= base_indent and line.strip():
+                # We've reached the next element at the same or lower level
+                break
+                
+            self._advance_line()
 
     def _parse_relationship(self) -> Dict[str, Any]:
         """Parse relationship definition."""
