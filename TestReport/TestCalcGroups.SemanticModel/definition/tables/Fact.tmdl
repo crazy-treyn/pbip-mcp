@@ -2,7 +2,7 @@
 table Fact
 	lineageTag: 8238bf5c-6975-43ae-88f4-03a4505049ed
 
-	measure PlaceholderMeasure = 1.0
+	measure PlaceholderMeasure = SUM(Fact[Revenue]) * 1.1
 		lineageTag: 837e6c2e-b4b2-4514-90c4-ef1521344dd5
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}

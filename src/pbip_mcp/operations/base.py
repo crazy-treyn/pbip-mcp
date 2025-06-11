@@ -38,10 +38,16 @@ class BaseOperation(ABC):
     def _get_semantic_model_path(self, project_path: str) -> Path:
         """Get semantic model directory path."""
         project_dir = Path(project_path)
+        
+        # Check if the path itself is a semantic model directory
+        if project_dir.is_dir() and project_dir.name.endswith(".SemanticModel"):
+            return project_dir
+        
+        # Handle .pbip file path
         if project_dir.is_file() and project_dir.suffix == ".pbip":
             project_dir = project_dir.parent
         
-        # Find semantic model directory
+        # Find semantic model directory in project directory
         for pattern in ["*.SemanticModel", "*.Dataset"]:
             dirs = list(project_dir.glob(pattern))
             if dirs:
