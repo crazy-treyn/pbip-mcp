@@ -3,9 +3,12 @@
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import logging
 
 from ..models import ProjectStructure, ProjectInfo, SemanticModel, Platform
 from .tmdl_parser import TMDLParser, TMDLParseError
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectParseError(Exception):
@@ -220,7 +223,7 @@ class ProjectParser:
             return None
 
         except Exception as e:
-            print(f"Warning: Error loading table {table_file}: {e}")
+            logger.warning(f"Warning: Error loading table {table_file}: {e}")
             return None
 
     def _convert_table_dict_to_model(self, table_data: Dict[str, Any]):
@@ -365,7 +368,7 @@ class ProjectParser:
             return parsed.get("relationships", [])
 
         except Exception as e:
-            print(f"Warning: Error loading relationships {relationships_file}: {e}")
+            logger.warning(f"Warning: Error loading relationships {relationships_file}: {e}")
             return []
 
     def _load_culture(self, culture_file: Path) -> Optional[Dict[str, Any]]:
@@ -383,7 +386,7 @@ class ProjectParser:
             return None
 
         except Exception as e:
-            print(f"Warning: Error loading culture {culture_file}: {e}")
+            logger.warning(f"Warning: Error loading culture {culture_file}: {e}")
             return None
 
     def _load_database(self, database_file: Path) -> Optional[Dict[str, Any]]:
@@ -396,7 +399,7 @@ class ProjectParser:
             return parsed.get("database", {})
 
         except Exception as e:
-            print(f"Warning: Error loading database {database_file}: {e}")
+            logger.warning(f"Warning: Error loading database {database_file}: {e}")
             return None
 
     def _load_platform_configs(self, project_dir: Path) -> Dict[str, Platform]:
@@ -409,6 +412,11 @@ class ProjectParser:
                 with open(platform_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
 
+                # Validate required fields before creating Platform object
+                if not self._validate_platform_data(data):
+                    logger.warning(f"Invalid platform config structure in {platform_file}")
+                    continue
+
                 # Get relative path for key
                 rel_path = platform_file.relative_to(project_dir)
                 key = str(rel_path.parent)
@@ -416,9 +424,36 @@ class ProjectParser:
                 platform_configs[key] = Platform(**data)
 
             except Exception as e:
-                print(f"Warning: Error loading platform config {platform_file}: {e}")
+                logger.warning(f"Error loading platform config {platform_file}: {e}")
 
         return platform_configs
+
+    def _validate_platform_data(self, data: Dict[str, Any]) -> bool:
+        """Validate platform configuration data structure."""
+        try:
+            # Check for required top-level fields
+            if "$schema" not in data:
+                return False
+            if "metadata" not in data or "config" not in data:
+                return False
+            
+            # Check metadata structure
+            metadata = data["metadata"]
+            if not isinstance(metadata, dict):
+                return False
+            if "type" not in metadata or "displayName" not in metadata:
+                return False
+            
+            # Check config structure
+            config = data["config"]
+            if not isinstance(config, dict):
+                return False
+            if "version" not in config or "logicalId" not in config:
+                return False
+                
+            return True
+        except Exception:
+            return False
 
     def _load_editor_settings(
         self, semantic_model_dir: Optional[Path]
@@ -435,7 +470,7 @@ class ProjectParser:
             with open(settings_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            print(f"Warning: Error loading editor settings: {e}")
+            logger.warning(f"Warning: Error loading editor settings: {e}")
             return None
 
     def _load_diagram_layout(
@@ -453,7 +488,7 @@ class ProjectParser:
             with open(layout_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            print(f"Warning: Error loading diagram layout: {e}")
+            logger.warning(f"Warning: Error loading diagram layout: {e}")
             return None
 
     def list_projects(self, directory: str) -> List[Dict[str, Any]]:
@@ -495,7 +530,7 @@ class ProjectParser:
                 projects.append(project_data)
 
             except Exception as e:
-                print(f"Warning: Error processing project {pbip_file}: {e}")
+                logger.warning(f"Warning: Error processing project {pbip_file}: {e}")
 
         return projects
 

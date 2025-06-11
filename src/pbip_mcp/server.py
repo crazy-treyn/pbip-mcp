@@ -1,6 +1,7 @@
 """Simplified and extensible PBIP MCP Server."""
 
 import asyncio
+import json
 import logging
 from typing import Any, Dict, List, Type
 
@@ -304,14 +305,20 @@ class SimplifiedPBIPServer:
         async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             """Handle tool calls."""
             if name not in self.tools:
-                return [TextContent(type="text", text=f"Unknown tool: {name}")]
+                return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
             
             try:
                 handler = self.tools[name]["handler"]
                 return await handler(arguments)
             except Exception as e:
                 logger.error(f"Error in tool {name}: {e}", exc_info=True)
-                return [TextContent(type="text", text=f"Error: {str(e)}")]
+                # Ensure error response is valid JSON
+                error_response = {
+                    "error": str(e),
+                    "tool": name,
+                    "type": type(e).__name__
+                }
+                return [TextContent(type="text", text=json.dumps(error_response, indent=2))]
         
         @self.app.list_resources()
         async def list_resources() -> List[Resource]:

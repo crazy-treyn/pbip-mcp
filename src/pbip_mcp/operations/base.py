@@ -87,7 +87,8 @@ class BaseOperation(ABC):
     
     def _error_response(self, message: str) -> List[TextContent]:
         """Create standardized error response."""
-        return [TextContent(type="text", text=f"Error: {message}")]
+        error_data = {"error": message, "success": False}
+        return [TextContent(type="text", text=json.dumps(error_data, indent=2))]
     
     def _validate_dax_syntax(self, expression: str) -> tuple[bool, str]:
         """Basic DAX syntax validation.
