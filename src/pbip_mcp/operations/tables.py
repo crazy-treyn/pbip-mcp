@@ -16,8 +16,8 @@ class TableOperations(BaseOperation):
             return await self.list_tables(arguments)
         elif operation == OperationType.GET:
             return await self.get_table_details(arguments)
-        elif operation == OperationType.GET_MODEL_OVERVIEW:
-            return await self.get_model_overview(arguments)
+        elif operation == OperationType.GET_MODEL_DETAILS:
+            return await self.get_model_details(arguments)
         else:
             return self._error_response(f"Unknown operation: {operation}")
     
@@ -114,8 +114,8 @@ class TableOperations(BaseOperation):
         
         return self._success_response(result)
     
-    async def get_model_overview(self, arguments: Dict[str, Any]) -> List[TextContent]:
-        """Get comprehensive overview of the entire semantic model."""
+    async def get_model_details(self, arguments: Dict[str, Any]) -> List[TextContent]:
+        """Get comprehensive details of the entire semantic model."""
         project = self._load_project(arguments["project_path"])
         
         # Collect detailed statistics

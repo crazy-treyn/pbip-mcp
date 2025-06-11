@@ -19,7 +19,7 @@ class OperationType:
     ADD = "add"
     UPDATE = "update"
     DELETE = "delete"
-    GET_MODEL_OVERVIEW = "get_model_overview"
+    GET_MODEL_DETAILS = "get_model_details"
 
 
 class BaseOperation(ABC):

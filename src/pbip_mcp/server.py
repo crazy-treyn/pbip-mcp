@@ -239,11 +239,11 @@ class SimplifiedPBIPServer:
                     }
                 )
             },
-            "get_model_overview": {
-                "handler": lambda args: self.operations["table"].execute(OperationType.GET_MODEL_OVERVIEW, args),
+            "get_model_details": {
+                "handler": lambda args: self.operations["table"].execute(OperationType.GET_MODEL_DETAILS, args),
                 "tool": Tool(
-                    name="get_model_overview",
-                    description="Get comprehensive overview of the entire semantic model with all tables, columns, measures, and relationships",
+                    name="get_model_details",
+                    description="Get comprehensive details of the entire semantic model with all tables, columns, measures, and relationships",
                     inputSchema={
                         "type": "object",
                         "properties": {
