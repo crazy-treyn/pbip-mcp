@@ -16,6 +16,8 @@ class TableOperations(BaseOperation):
             return await self.list_tables(arguments)
         elif operation == OperationType.GET:
             return await self.get_table_details(arguments)
+        elif operation == OperationType.GET_MODEL_OVERVIEW:
+            return await self.get_model_overview(arguments)
         else:
             return self._error_response(f"Unknown operation: {operation}")
     
@@ -111,3 +113,103 @@ class TableOperations(BaseOperation):
         }
         
         return self._success_response(result)
+    
+    async def get_model_overview(self, arguments: Dict[str, Any]) -> List[TextContent]:
+        """Get comprehensive overview of the entire semantic model."""
+        project = self._load_project(arguments["project_path"])
+        
+        # Collect detailed statistics
+        total_tables = len(project.semantic_model.tables)
+        total_columns = sum(len(t.columns) for t in project.semantic_model.tables)
+        total_measures = sum(len(t.measures) for t in project.semantic_model.tables)
+        total_relationships = len(project.semantic_model.relationships)
+        
+        # Data type distribution
+        data_type_counts = {}
+        calculated_columns = 0
+        hidden_columns = 0
+        
+        # Table details
+        table_details = []
+        for table in project.semantic_model.tables:
+            table_info = {
+                "name": table.name,
+                "is_hidden": table.is_hidden,
+                "is_private": table.is_private,
+                "column_count": len(table.columns),
+                "measure_count": len(table.measures),
+                "hierarchy_count": len(table.hierarchies),
+                "partition_count": len(table.partitions),
+                "columns": [],
+                "measures": []
+            }
+            
+            # Column details
+            for column in table.columns:
+                if column.expression:
+                    calculated_columns += 1
+                if column.is_hidden:
+                    hidden_columns += 1
+                
+                # Count data types
+                data_type = str(column.data_type)
+                data_type_counts[data_type] = data_type_counts.get(data_type, 0) + 1
+                
+                table_info["columns"].append({
+                    "name": column.name,
+                    "data_type": data_type,
+                    "is_calculated": column.expression is not None,
+                    "is_hidden": column.is_hidden,
+                    "summarize_by": str(column.summarize_by)
+                })
+            
+            # Measure details
+            for measure in table.measures:
+                table_info["measures"].append({
+                    "name": measure.name,
+                    "expression_preview": measure.expression[:100] + "..." if len(measure.expression) > 100 else measure.expression,
+                    "is_hidden": measure.is_hidden,
+                    "has_format": measure.format_string is not None
+                })
+            
+            table_details.append(table_info)
+        
+        # Relationship summary
+        relationship_summary = {
+            "total": total_relationships,
+            "active": sum(1 for r in project.semantic_model.relationships if r.is_active),
+            "inactive": sum(1 for r in project.semantic_model.relationships if not r.is_active),
+            "by_cardinality": {}
+        }
+        
+        for rel in project.semantic_model.relationships:
+            cardinality = str(rel.cardinality) if rel.cardinality else "Unknown"
+            relationship_summary["by_cardinality"][cardinality] = relationship_summary["by_cardinality"].get(cardinality, 0) + 1
+        
+        # Build comprehensive response
+        overview = {
+            "model_name": project.semantic_model.name,
+            "culture": project.semantic_model.culture,
+            "summary": {
+                "tables": {
+                    "total": total_tables,
+                    "hidden": sum(1 for t in project.semantic_model.tables if t.is_hidden),
+                    "private": sum(1 for t in project.semantic_model.tables if t.is_private)
+                },
+                "columns": {
+                    "total": total_columns,
+                    "calculated": calculated_columns,
+                    "regular": total_columns - calculated_columns,
+                    "hidden": hidden_columns,
+                    "by_data_type": data_type_counts
+                },
+                "measures": {
+                    "total": total_measures,
+                    "hidden": sum(1 for t in project.semantic_model.tables for m in t.measures if m.is_hidden)
+                },
+                "relationships": relationship_summary
+            },
+            "tables": table_details
+        }
+        
+        return self._success_response(overview)

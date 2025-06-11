@@ -24,35 +24,76 @@ class ColumnOperations(BaseOperation):
             return self._error_response(f"Unknown operation: {operation}")
     
     async def list_columns(self, arguments: Dict[str, Any]) -> List[TextContent]:
-        """List all columns in a table."""
+        """List all columns in a table or all tables."""
         project = self._load_project(arguments["project_path"])
-        table_name = arguments["table_name"]
+        table_name = arguments.get("table_name")  # Make optional
         
-        # Find table using normalized name comparison
-        normalized_table_name = self._normalize_element_name(table_name)
-        table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
-        if not table:
-            return self._error_response(f"Table '{table_name}' not found")
-        
-        columns = []
-        for column in table.columns:
-            columns.append({
-                "name": column.name,
-                "data_type": column.data_type,
-                "summarize_by": column.summarize_by,
-                "format_string": column.format_string,
-                "is_hidden": column.is_hidden,
-                "is_calculated": column.expression is not None,
-                "expression": column.expression,
-                "lineage_tag": column.lineage_tag,
-                "description": column.description
+        if table_name:
+            # Single table mode (existing behavior)
+            normalized_table_name = self._normalize_element_name(table_name)
+            table = next((t for t in project.semantic_model.tables if self._normalize_element_name(t.name) == normalized_table_name), None)
+            if not table:
+                return self._error_response(f"Table '{table_name}' not found")
+            
+            columns = []
+            for column in table.columns:
+                columns.append({
+                    "name": column.name,
+                    "data_type": column.data_type,
+                    "summarize_by": column.summarize_by,
+                    "format_string": column.format_string,
+                    "is_hidden": column.is_hidden,
+                    "is_calculated": column.expression is not None,
+                    "expression": column.expression,
+                    "lineage_tag": column.lineage_tag,
+                    "description": column.description
+                })
+            
+            return self._success_response({
+                "table_name": table_name,
+                "count": len(columns),
+                "columns": columns
             })
-        
-        return self._success_response({
-            "table_name": table_name,
-            "count": len(columns),
-            "columns": columns
-        })
+        else:
+            # All tables mode (new functionality)
+            all_columns = []
+            table_summary = []
+            total_columns = 0
+            
+            for table in project.semantic_model.tables:
+                table_columns = []
+                for column in table.columns:
+                    column_data = {
+                        "table_name": table.name,
+                        "name": column.name,
+                        "data_type": column.data_type,
+                        "summarize_by": column.summarize_by,
+                        "format_string": column.format_string,
+                        "is_hidden": column.is_hidden,
+                        "is_calculated": column.expression is not None,
+                        "expression": column.expression,
+                        "lineage_tag": column.lineage_tag,
+                        "description": column.description
+                    }
+                    table_columns.append(column_data)
+                    all_columns.append(column_data)
+                
+                # Add table summary
+                table_summary.append({
+                    "table_name": table.name,
+                    "column_count": len(table_columns),
+                    "calculated_columns": sum(1 for c in table_columns if c["is_calculated"]),
+                    "hidden_columns": sum(1 for c in table_columns if c["is_hidden"])
+                })
+                total_columns += len(table_columns)
+            
+            return self._success_response({
+                "scope": "all_tables",
+                "total_tables": len(project.semantic_model.tables),
+                "total_columns": total_columns,
+                "table_summary": table_summary,
+                "columns": all_columns
+            })
     
     async def add_column(self, arguments: Dict[str, Any]) -> List[TextContent]:
         """Add a new column to a table."""

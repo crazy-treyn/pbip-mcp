@@ -25,17 +25,20 @@ class MeasureOperations(BaseOperation):
             return self._error_response(f"Unknown operation: {operation}")
     
     async def list_measures(self, arguments: Dict[str, Any]) -> List[TextContent]:
-        """List all measures in the project."""
+        """List all measures in the project or specific table."""
         project = self._load_project(arguments["project_path"])
         table_name = arguments.get("table_name")
         
         measures = []
+        table_summary = []
+        
         for table in project.semantic_model.tables:
             if table_name and table.name != table_name:
                 continue
             
+            table_measures = []
             for measure in table.measures:
-                measures.append({
+                measure_data = {
                     "table_name": table.name,
                     "name": measure.name,
                     "expression": measure.expression,
@@ -43,12 +46,35 @@ class MeasureOperations(BaseOperation):
                     "lineage_tag": measure.lineage_tag,
                     "is_hidden": measure.is_hidden,
                     "description": measure.description
+                }
+                measures.append(measure_data)
+                table_measures.append(measure_data)
+            
+            # Add table summary for multi-table mode
+            if not table_name:
+                table_summary.append({
+                    "table_name": table.name,
+                    "measure_count": len(table_measures),
+                    "hidden_measures": sum(1 for m in table_measures if m["is_hidden"])
                 })
         
-        return self._success_response({
-            "count": len(measures),
-            "measures": measures
-        })
+        if table_name:
+            # Single table response
+            return self._success_response({
+                "table_name": table_name,
+                "count": len(measures),
+                "measures": measures
+            })
+        else:
+            # All tables response with summary
+            return self._success_response({
+                "scope": "all_tables",
+                "total_tables": len(project.semantic_model.tables),
+                "total_measures": len(measures),
+                "hidden_measures": sum(1 for m in measures if m["is_hidden"]),
+                "table_summary": table_summary,
+                "measures": measures
+            })
     
     async def add_measure(self, arguments: Dict[str, Any]) -> List[TextContent]:
         """Add a new measure to a table."""

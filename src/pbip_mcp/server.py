@@ -137,14 +137,14 @@ class SimplifiedPBIPServer:
                 "handler": lambda args: self.operations["column"].execute(OperationType.LIST, args),
                 "tool": Tool(
                     name="list_columns",
-                    description="List all columns in a table",
+                    description="List all columns in a table or all tables (if table_name omitted)",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"},
-                            "table_name": {"type": "string", "description": "Table name"}
+                            "table_name": {"type": "string", "description": "Table name (optional - omit to get all columns from all tables)"}
                         },
-                        "required": ["project_path", "table_name"]
+                        "required": ["project_path"]
                     }
                 )
             },
@@ -236,6 +236,20 @@ class SimplifiedPBIPServer:
                             "table_name": {"type": "string", "description": "Table name"}
                         },
                         "required": ["project_path", "table_name"]
+                    }
+                )
+            },
+            "get_model_overview": {
+                "handler": lambda args: self.operations["table"].execute(OperationType.GET_MODEL_OVERVIEW, args),
+                "tool": Tool(
+                    name="get_model_overview",
+                    description="Get comprehensive overview of the entire semantic model with all tables, columns, measures, and relationships",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "project_path": {"type": "string", "description": "Path to PBIP project file or .SemanticModel directory"}
+                        },
+                        "required": ["project_path"]
                     }
                 )
             },
